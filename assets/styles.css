@@ -209,6 +209,11 @@ button{ font:inherit; color:inherit; cursor:pointer; }
 .section__orn i{ height:1px; width:min(90px,18vw); background:linear-gradient(90deg,transparent,var(--gold)); }
 .section__orn i:last-child{ background:linear-gradient(270deg,transparent,var(--gold)); }
 .section__lead{ text-align:center; margin:0 auto 34px; max-width:44ch; color:var(--ink-soft); font-weight:300; }
+.section__code{
+  display:inline-block; margin-top:8px;
+  font-size:.78rem; letter-spacing:.06em; color:var(--gold-dp);
+  direction:ltr; unicode-bidi:isolate;
+}
 
 /* reveal on scroll */
 .reveal{ opacity:0; transform:translateY(26px); transition:opacity .9s cubic-bezier(.2,.8,.25,1), transform .9s cubic-bezier(.2,.8,.25,1); }

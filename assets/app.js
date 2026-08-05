@@ -12,21 +12,31 @@ const CONFIG = {
   startISO: '2026-08-06T20:00:00+03:00',
   hours:    5,                       // مدة الحفل التقريبية لإضافتها للتقويم
 
-  venue:     'قاعة مريديان',
-  venueArea: 'قرية عطاف — مركز المحلة الكبرى، محافظة الغربية',
-  /* عبارة البحث في خرائط Google — تفتح القاعة مباشرة على الخريطة */
-  mapQuery:  'قاعة مريديان عطاف مركز المحلة الكبرى محافظة الغربية',
+  venue:     'قرية مريديان السياحية',
+  venueArea: 'عطاف — مركز المحلة الكبرى، محافظة الغربية',
+  plusCode:  '35G5+H44',
+
+  /* رابط المكان على خرائط Google — دبوس مضبوط، يفتح تطبيق الخرائط على الموبايل */
+  mapLink: 'https://maps.app.goo.gl/GpF1Cg1pEtPXZnLp9o',
+
+  /* إحداثيات الدبوس 'خط العرض,خط الطول' — تجعل الخريطة والتوجيه دقيقين تمامًا */
+  coords: '31.0767179,31.158289',
+
+  /* عبارة البحث الاحتياطية حين لا تتوفّر إحداثيات */
+  mapQuery: 'قرية مريديان السياحية عطاف مركز المحلة الكبرى محافظة الغربية',
 
   /* اختياري: ضع رقم واتساب لتأكيد الحضور بصيغة دولية بدون + مثل 201012345678
      اتركه فارغًا وسيفتح واتساب ليختار الضيف المرسل إليه بنفسه. */
   whatsapp: '',
 
-  /* صور الألبوم — ضع الصور داخل مجلد photos بهذه الأسماء.
-     أي صورة غير موجودة تُتجاهل تلقائيًا، والقسم كله يختفي إن لم توجد صور. */
-  photos: [
-    'photos/01.jpg', 'photos/02.jpg', 'photos/03.jpg',
-    'photos/04.jpg', 'photos/05.jpg', 'photos/06.jpg'
-  ]
+  /* صور الألبوم: ضع الصور في مجلد photos وسمِّها بأرقام 1.jpg أو 1.jpeg وهكذا.
+     الصفحة تجرّب الامتدادات الشائعة تلقائيًا وتعرض الموجود فقط بالترتيب،
+     وتُخفي القسم كله إن لم توجد صور — فلا يرى الضيف أي فراغ. */
+  photoCount: 12,
+  photoExts:  ['jpg', 'jpeg', 'png', 'webp', 'JPG', 'JPEG'],
+
+  /* أسماء إضافية بحروف عربية أو مسافات (تُرمَّز تلقائيًا) */
+  extraPhotos: ['كامبو والعريس.jpeg']
 };
 
 /* ── helpers ─────────────────────────────────────────────── */
@@ -43,9 +53,16 @@ const EVENT_END   = new Date(EVENT_START.getTime() + CONFIG.hours * 3600e3);
 const EVENT_TITLE = `حفل زفاف ${CONFIG.groom} و ${CONFIG.bride}`;
 const EVENT_PLACE = `${CONFIG.venue} — ${CONFIG.venueArea}`;
 
-const MAPS_PLACE  = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(CONFIG.mapQuery)}`;
-const MAPS_DIR    = `https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(CONFIG.mapQuery)}`;
-const MAPS_EMBED  = `https://maps.google.com/maps?q=${encodeURIComponent(CONFIG.mapQuery)}&hl=ar&z=14&output=embed`;
+/* الإحداثيات أدقّ من الاسم، فنُفضّلها متى توفّرت */
+const MAP_TARGET = CONFIG.coords.trim() || CONFIG.mapQuery;
+const MAP_ZOOM   = CONFIG.coords.trim() ? 17 : 14;
+
+/* زر «افتح الموقع» يستخدم رابط القاعة نفسه لأنه يحمل الدبوس المضبوط،
+   ويفتح تطبيق الخرائط مباشرة على الموبايل. */
+const MAPS_PLACE  = CONFIG.mapLink ||
+  `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(CONFIG.mapQuery)}`;
+const MAPS_DIR    = `https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(MAP_TARGET)}`;
+const MAPS_EMBED  = `https://maps.google.com/maps?q=${encodeURIComponent(MAP_TARGET)}&hl=ar&z=${MAP_ZOOM}&output=embed`;
 
 function toast(msg) {
   const el = $('#toast');
@@ -197,8 +214,31 @@ const probe = src => new Promise(resolve => {
   img.src = src;
 });
 
+/* نبحث عن photos/1.* ثم photos/2.* … ونتوقف عند أول امتداد ينجح لكل رقم،
+   ونكفّ عن البحث بعد رقمين متتاليين غير موجودين — حتى لا نُثقل بيانات الضيف
+   بعشرات الطلبات الفاشلة. */
+async function findPhotos() {
+  const found = [];
+  let misses = 0;
+
+  for (let i = 1; i <= CONFIG.photoCount && misses < 2; i++) {
+    let hit = null;
+    for (const ext of CONFIG.photoExts) {
+      hit = await probe(`photos/${i}.${ext}`);
+      if (hit) break;
+    }
+    if (hit) { found.push(hit); misses = 0; } else { misses++; }
+  }
+
+  for (const name of CONFIG.extraPhotos) {
+    const hit = await probe('photos/' + encodeURIComponent(name));
+    if (hit) found.push(hit);
+  }
+  return found;
+}
+
 async function buildGallery() {
-  const found = (await Promise.all(CONFIG.photos.map(probe))).filter(Boolean);
+  const found = await findPhotos();
   if (!found.length) return;
 
   const grid = $('#galleryGrid');
