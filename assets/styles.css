@@ -490,6 +490,24 @@ button{ font:inherit; color:inherit; cursor:pointer; }
 .foot__by{ margin:30px 0 0; font-size:.75rem; letter-spacing:.16em; color:rgba(242,221,170,.5); }
 .foot__by b{ color:var(--gold-lt); font-weight:600; }
 
+/* ══════════ لوحة الترحيب (صور الطفولة) ══════════ */
+.board{ background:linear-gradient(180deg,var(--ivory),var(--ivory-warm)); }
+.board__frame{
+  margin:0; padding:14px 14px 0;
+  border-radius:var(--rad);
+  background:var(--paper);
+  border:1px solid rgba(201,162,75,.28);
+  box-shadow:var(--shadow-l);
+}
+.board__frame img{
+  width:100%; height:auto; display:block;
+  border-radius:calc(var(--rad) - 8px);
+}
+.board__frame figcaption{
+  padding:18px 10px 20px; text-align:center;
+  font-size:.9rem; font-weight:300; color:var(--ink-soft);
+}
+
 /* ══════════ توقيع المصمّم (Weddify) ══════════ */
 .brand{ margin-top:46px; }
 .brand__rule{ display:flex; align-items:center; justify-content:center; gap:14px; margin-bottom:26px; }
