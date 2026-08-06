@@ -1,0 +1,4 @@
+# ملفات مؤقتة من الاختبارات
+*.tmp
+inv_board.png
+board_*.png
